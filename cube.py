@@ -11,7 +11,7 @@ class Cube:
 
     def __init__(self):
         self.permutation = np.arange(8).reshape((2, 2, 2))
-        self.orientation = np.zeros((2, 2, 2))
+        self.orientation = np.zeros((2, 2, 2), dtype=int)
 
     def rotate(self, axis: int, layer: int, clockwise: bool,
                quarter_turn_count: int):
@@ -28,6 +28,19 @@ class Cube:
         axes = [(1, 2), (2, 0), (0, 1)][axis]
         self.permutation[slices] = np.rot90(self.permutation[slices], k=k,
                                             axes=axes)
+        self.orientation[slices] = np.rot90(self.orientation[slices], k=k,
+                                            axes=axes)
+        # Adjust the orientations of the pieces if the quarter turn count is
+        # odd.
+        if quarter_turn_count % 2 == 1:
+            # Swap the two orientation values that are not equal to the axis.
+            # For example, if the axis is 1, then change 0 orientation values
+            # to 2 and 2 orientation values to 0.
+            orientation_axes = np.arange(3)
+            orientation_axes[axes[0]], orientation_axes[axes[1]] = \
+                orientation_axes[axes[1]], orientation_axes[axes[0]]
+            self.orientation[slices] = orientation_axes[
+                self.orientation[slices]]
 
     def render(self, colors=None, border_color='k', border_width=2,
                background_color='#232323', mirror_gap=1.6):

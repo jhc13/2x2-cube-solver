@@ -37,8 +37,8 @@ class Cube:
             # For example, if the axis is 1, then change 0 orientation values
             # to 2 and 2 orientation values to 0.
             orientation_axes = np.arange(3)
-            orientation_axes[axes[0]], orientation_axes[axes[1]] = \
-                orientation_axes[axes[1]], orientation_axes[axes[0]]
+            orientation_axes[[axes[0], axes[1]]] = (
+                orientation_axes[[axes[1], axes[0]]])
             self.orientation[slices] = orientation_axes[
                 self.orientation[slices]]
 
@@ -65,6 +65,19 @@ class Cube:
                  enumerate(binary_piece_index)])
             piece_orientation = self.orientation[layer, row, column]
             piece_colors = np.roll(piece_colors, piece_orientation)
+            # Calculate the Manhattan distance between the piece's current and
+            # solved positions.
+            distance = sum(int(binary_piece_index[i]) - position
+                           for i, position in enumerate([layer, row, column]))
+            if distance % 2 == 1:
+                # Swap the two colors whose axes do not equal the piece's
+                # orientation value.
+                if piece_orientation == 0:
+                    piece_colors[[1, 2]] = piece_colors[[2, 1]]
+                elif piece_orientation == 1:
+                    piece_colors[[2, 0]] = piece_colors[[0, 2]]
+                elif piece_orientation == 2:
+                    piece_colors[[0, 1]] = piece_colors[[1, 0]]
             for axis, color in enumerate(piece_colors):
                 if axis == 0:
                     x = mirror_gap + column

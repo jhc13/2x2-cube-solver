@@ -72,12 +72,9 @@ class Cube:
             if distance % 2 == 1:
                 # Swap the two colors whose axes do not equal the piece's
                 # orientation value.
-                if piece_orientation == 0:
-                    piece_colors[[1, 2]] = piece_colors[[2, 1]]
-                elif piece_orientation == 1:
-                    piece_colors[[2, 0]] = piece_colors[[0, 2]]
-                elif piece_orientation == 2:
-                    piece_colors[[0, 1]] = piece_colors[[1, 0]]
+                axes_to_swap = [[1, 2], [2, 0], [0, 1]][piece_orientation]
+                piece_colors[[axes_to_swap[0], axes_to_swap[1]]] = (
+                    piece_colors[[axes_to_swap[1], axes_to_swap[0]]])
             for axis, color in enumerate(piece_colors):
                 if axis == 0:
                     x = mirror_gap + column

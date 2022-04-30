@@ -13,6 +13,22 @@ class Cube:
         self.permutation = np.arange(8).reshape((2, 2, 2))
         self.orientation = np.zeros((2, 2, 2))
 
+    def rotate(self, axis: int, layer: int, clockwise: bool,
+               quarter_turn_count: int):
+        """
+        Rotate a layer of the cube.
+        """
+        slices = tuple(slice(layer, layer + 1) if axis_index == axis
+                       else slice(None, None) for axis_index in range(3))
+        k = quarter_turn_count
+        if layer == 1:
+            k = -k
+        if not clockwise:
+            k = -k
+        axes = [(1, 2), (2, 0), (0, 1)][axis]
+        self.permutation[slices] = np.rot90(self.permutation[slices], k=k,
+                                            axes=axes)
+
     def render(self, colors=None, border_color='k', border_width=2,
                background_color='#232323', mirror_gap=1.6):
         """

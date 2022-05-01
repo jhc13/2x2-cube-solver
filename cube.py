@@ -51,6 +51,15 @@ class Cube:
         quarter_turn_count = 2 if len(move) == 2 and move[1] == "2" else 1
         self.turn_layer(axis, clockwise, quarter_turn_count)
 
+    def apply_moves(self, moves: str):
+        """
+        Apply a sequence of moves to the cube.
+
+        The moves are separated by spaces.
+        """
+        for move in moves.split():
+            self.apply_move(move)
+
     def render(self, colors=None, border_color='k', border_width=2,
                background_color='#232323', mirror_gap=1.6):
         """

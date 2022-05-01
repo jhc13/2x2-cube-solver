@@ -40,6 +40,17 @@ class Cube:
             self.orientation[slices] = orientation_axes[
                 self.orientation[slices]]
 
+    def apply_move(self, move: str):
+        """
+        Apply a move to the cube.
+
+        The move is a string such as "U", "F'", or "R2".
+        """
+        axis = {'U': 0, 'F': 1, 'R': 2}[move[0]]
+        clockwise = not (len(move) == 2 and move[1] == "'")
+        quarter_turn_count = 2 if len(move) == 2 and move[1] == "2" else 1
+        self.turn_layer(axis, clockwise, quarter_turn_count)
+
     def render(self, colors=None, border_color='k', border_width=2,
                background_color='#232323', mirror_gap=1.6):
         """

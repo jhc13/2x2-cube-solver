@@ -55,7 +55,7 @@ class Cube:
         """
         Apply a sequence of moves to the cube.
 
-        The moves are separated by spaces.
+        The moves are a string with a space between each move.
         """
         for move in moves.split():
             self.apply_move(move)

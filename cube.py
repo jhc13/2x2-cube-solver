@@ -10,9 +10,17 @@ class Cube:
     """
 
     def __init__(self):
+        self.permutation = None
+        self.orientation = None
+        self.reset()
+        self.rng = np.random.default_rng()
+
+    def reset(self):
+        """
+        Reset the cube to its solved state.
+        """
         self.permutation = np.arange(8).reshape((2, 2, 2))
         self.orientation = np.zeros((2, 2, 2), dtype=int)
-        self.rng = np.random.default_rng()
 
     def turn_layer(self, axis: int, clockwise: bool, quarter_turn_count: int):
         """

@@ -35,18 +35,29 @@ class Cube:
     currently in each position.
     """
 
-    def __init__(self):
+    def __init__(self, seed=None):
+        self.rng = None
         self.permutation = None
         self.orientation = None
-        self.reset()
-        self.rng = np.random.default_rng()
+        self.solved_permutation = np.arange(8).reshape((2, 2, 2))
+        self.solved_orientation = np.zeros((2, 2, 2), dtype=int)
+        self.reset(seed=seed)
 
-    def reset(self):
+    def reset(self, seed=None):
         """
         Reset the cube to its solved state.
         """
-        self.permutation = np.arange(8).reshape((2, 2, 2))
-        self.orientation = np.zeros((2, 2, 2), dtype=int)
+        if seed or self.rng is None:
+            self.rng = np.random.default_rng(seed=seed)
+        self.permutation = self.solved_permutation.copy()
+        self.orientation = self.solved_orientation.copy()
+
+    def is_solved(self) -> bool:
+        """
+        Check if the cube is solved.
+        """
+        return (np.array_equal(self.permutation, self.solved_permutation)
+                and np.array_equal(self.orientation, self.solved_orientation))
 
     def turn_layer(self, axis: int, clockwise: bool, quarter_turn_count: int):
         """

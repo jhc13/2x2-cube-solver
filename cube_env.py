@@ -34,17 +34,17 @@ class CubeEnv(gym.Env):
         self.previous_actions = []
 
     def get_action_mask(self):
-        action_mask = np.ones(6)
+        action_mask = np.full(6, True)
         # Prevent undoing the previous move.
         if self.previous_actions:
             previous_action = self.previous_actions[-1]
             undoing_action = (previous_action + 1 if previous_action % 2 == 0
                               else previous_action - 1)
-            action_mask[undoing_action] = 0
+            action_mask[undoing_action] = False
         # Prevent repeating the same move 3 times.
         if (len(self.previous_actions) >= 2
                 and self.previous_actions[-2] == self.previous_actions[-1]):
-            action_mask[self.previous_actions[-1]] = 0
+            action_mask[self.previous_actions[-1]] = False
         return action_mask
 
     def get_observation(self):

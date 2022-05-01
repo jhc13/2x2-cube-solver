@@ -12,6 +12,7 @@ class Cube:
     def __init__(self):
         self.permutation = np.arange(8).reshape((2, 2, 2))
         self.orientation = np.zeros((2, 2, 2), dtype=int)
+        self.rng = np.random.default_rng()
 
     def turn_layer(self, axis: int, clockwise: bool, quarter_turn_count: int):
         """
@@ -59,6 +60,34 @@ class Cube:
         """
         for move in moves.split():
             self.apply_move(move)
+
+    def scramble(self, quarter_turn_count: int) -> str:
+        """
+        Scramble the cube using a random sequence moves of the given quarter
+        turn count.
+
+        Returns the scramble as a string.
+        """
+        moves = []
+        for _ in range(quarter_turn_count):
+            layers = ['U', 'F', 'R']
+            # If the previous move was a double move, then the next move must
+            # turn a different layer.
+            if moves and moves[-1][-1] == '2':
+                layers.remove(moves[-1][0])
+            layer = self.rng.choice(layers)
+            # If the chosen layer is the same as that of the previous move,
+            # change the previous move to a double move instead of adding a new
+            # move.
+            if moves and layer == moves[-1][0]:
+                moves[-1] = layer + '2'
+            elif self.rng.choice([True, False]):
+                moves.append(layer + "'")
+            else:
+                moves.append(layer)
+        scramble = ' '.join(moves)
+        self.apply_moves(scramble)
+        return scramble
 
     def render(self, colors=None, border_color='k', border_width=2,
                background_color='#232323', mirror_gap=1.6):

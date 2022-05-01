@@ -1,17 +1,8 @@
-import numpy as np
 import gym
+import numpy as np
 from gym import spaces
 
 from cube import Cube
-
-
-def one_hot_encode(array, category_count):
-    """
-    One-hot encode a 1D array of integers.
-
-    Returns a 2D array.
-    """
-    return np.identity(category_count)[array]
 
 
 class CubeEnv(gym.Env):
@@ -19,7 +10,7 @@ class CubeEnv(gym.Env):
 
     def __init__(self):
         self.observation_space = spaces.Dict(
-            {'cube': spaces.MultiBinary([6, 10]),
+            {'cube_state': spaces.MultiBinary([6, 10]),
              'action_mask': spaces.MultiBinary(6)})
         self.action_space = spaces.Discrete(6)
         self.moves = {
@@ -32,6 +23,13 @@ class CubeEnv(gym.Env):
         }
         self.cube = Cube()
         self.previous_actions = []
+
+    @staticmethod
+    def get_undoing_action(action: int):
+        """
+        Get the action that undoes the given action.
+        """
+        return action + 1 if action % 2 == 0 else action - 1
 
     def get_action_mask(self):
         action_mask = np.full(6, True)
@@ -58,9 +56,9 @@ class CubeEnv(gym.Env):
         orientation = self.cube.orientation.flatten()[2:]
         encoded_permutation = one_hot_encode(permutation, category_count=7)
         encoded_orientation = one_hot_encode(orientation, category_count=3)
-        cube = np.hstack((encoded_permutation, encoded_orientation))
+        cube_state = np.hstack((encoded_permutation, encoded_orientation))
         action_mask = self.get_action_mask()
-        observation = {'cube': cube, 'action_mask': action_mask}
+        observation = {'cube_state': cube_state, 'action_mask': action_mask}
         return observation
 
     def reset(self, seed=None, return_info=False, options=None):
@@ -84,3 +82,12 @@ class CubeEnv(gym.Env):
 
     def render(self, mode='human'):
         self.cube.render()
+
+
+def one_hot_encode(array, category_count):
+    """
+    One-hot encode a 1D array of integers.
+
+    Returns a 2D array.
+    """
+    return np.identity(category_count)[array]

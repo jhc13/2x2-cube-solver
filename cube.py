@@ -1,6 +1,6 @@
-import numpy as np
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.art3d as art3d
+import numpy as np
 from matplotlib import patches
 
 
@@ -194,4 +194,4 @@ class Cube:
         ax.axis('off')
         ax.set_facecolor(background_color)
         fig.tight_layout(pad=0)
-        plt.show()
+        fig.show()

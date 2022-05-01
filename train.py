@@ -2,9 +2,9 @@ import datetime
 from collections import deque
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import matplotlib.pyplot as plt
 from torch import nn, optim
 from tqdm import tqdm
 
@@ -38,22 +38,22 @@ class Trainer:
     def update_target_network(self):
         self.target_network.load_state_dict(self.policy_network.state_dict())
 
-    def get_best_actions(self, cubes, action_masks):
+    def get_best_actions(self, cube_states, action_masks):
         self.policy_network.eval()
         with torch.no_grad():
-            q_values = self.policy_network(cubes)
+            q_values = self.policy_network(cube_states)
         self.policy_network.train()
         q_values[~action_masks] = float('-inf')
         best_actions = q_values.max(dim=1).indices
         return best_actions
 
     def get_action(self, observation):
-        cube = observation['cube']
+        cube_state = observation['cube_state']
         action_mask = observation['action_mask']
         if self.rng.random() < self.epsilon:
             return self.rng.choice(np.flatnonzero(action_mask))
         return self.get_best_actions(
-            torch.as_tensor(cube, dtype=torch.float,
+            torch.as_tensor(cube_state, dtype=torch.float,
                             device=self.device).unsqueeze(0),
             torch.as_tensor(action_mask, device=self.device).unsqueeze(0)
         ).item()
@@ -81,16 +81,16 @@ class Trainer:
             self.get_experience_batch())
         with torch.no_grad():
             target_network_next_q_values = self.target_network(
-                next_observations['cube'])
+                next_observations['cube_state'])
         best_next_actions = self.get_best_actions(
-            next_observations['cube'],
+            next_observations['cube_state'],
             next_observations['action_mask']).unsqueeze(1)
         best_next_q_values = (
             target_network_next_q_values.gather(1, best_next_actions).squeeze()
         )
         target_q_values = (rewards + (1 - dones) * config.DISCOUNT_FACTOR
                            * best_next_q_values)
-        all_q_values = self.policy_network(observations['cube'])
+        all_q_values = self.policy_network(observations['cube_state'])
         q_values = all_q_values.gather(1, actions).squeeze()
 
         loss = self.criterion(target_q_values, q_values)
@@ -134,7 +134,7 @@ class Trainer:
         ax_2.plot(self.epsilons, color='g', label='Epsilon')
         fig.legend(loc='lower right', fontsize=12, bbox_to_anchor=(1, 0),
                    bbox_transform=ax_1.transAxes)
-        plt.tight_layout()
+        fig.tight_layout()
         plt.savefig(f'{self.run_path}/plot.png')
         plt.close('all')
 

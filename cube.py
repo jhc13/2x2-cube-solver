@@ -47,8 +47,8 @@ class Cube:
         The move is a string such as "U", "F'", or "R2".
         """
         axis = {'U': 0, 'F': 1, 'R': 2}[move[0]]
-        clockwise = not (len(move) == 2 and move[1] == "'")
-        quarter_turn_count = 2 if len(move) == 2 and move[1] == "2" else 1
+        clockwise = not move[-1] == "'"
+        quarter_turn_count = 2 if move[-1] == '2' else 1
         self.turn_layer(axis, clockwise, quarter_turn_count)
 
     def apply_moves(self, moves: str):

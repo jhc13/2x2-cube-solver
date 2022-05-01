@@ -7,6 +7,32 @@ from matplotlib import patches
 class Cube:
     """
     A 2x2x2 Rubik's cube.
+
+    The three axes of the cube, numbered from 0 to 2, are the 0 axis (D to U),
+    the 1 axis (B to F), and the 2 axis (L to R). For example, the DBL corner
+    piece is located at (0, 0, 0) and the UBR corner piece is located at
+    (1, 0, 1).
+
+    Each piece is assigned a unique piece index from 0 to 7, with the 0 piece
+    being the piece at (0, 0, 0) in the solved state, the 1 piece being the
+    piece at (0, 0, 1) in the solved state, and so on. The permutation array is
+    a 3D array of shape (2, 2, 2) that holds the piece indices. The piece index
+    in each position of the array corresponds to the piece that currently
+    occupies that position. For example, if the (0, 0, 0) element of the
+    permutation array is 4, the piece that is currently at the DBL position is
+    the piece with index 4.
+
+    Each piece is also assigned an orientation value from 0 to 2. Multiple
+    pieces can have the same orientation value. The orientation value of a
+    piece is determined as follows. In the solved state, there are two faces of
+    the cube that are normal to the 0 axis, the D and U  faces. For the
+    standard color scheme, these faces are the yellow and white faces. The
+    orientation value of a piece is the axis to which one of these two faces on
+    the piece is normal. For example, if a piece of a scrambled cube with the
+    standard color scheme has white on its F face, then its orientation value
+    is 1 since the F face is normal to the 1 axis. The orientation array is a
+    3D array of shape (2, 2, 2) that holds the orientation values of the pieces
+    currently in each position.
     """
 
     def __init__(self):

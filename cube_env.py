@@ -22,7 +22,6 @@ class CubeEnv(gym.Env):
             {'cube': spaces.MultiBinary([6, 10]),
              'action_mask': spaces.MultiBinary(6)})
         self.action_space = spaces.Discrete(6)
-        self.cube = Cube()
         self.moves = {
             0: 'U',
             1: "U'",
@@ -31,6 +30,22 @@ class CubeEnv(gym.Env):
             4: 'R',
             5: "R'"
         }
+        self.cube = Cube()
+        self.previous_actions = []
+
+    def get_action_mask(self):
+        action_mask = np.ones(6)
+        # Prevent undoing the previous move.
+        if self.previous_actions:
+            previous_action = self.previous_actions[-1]
+            undoing_action = (previous_action + 1 if previous_action % 2 == 0
+                              else previous_action - 1)
+            action_mask[undoing_action] = 0
+        # Prevent repeating the same move 3 times.
+        if (len(self.previous_actions) >= 2
+                and self.previous_actions[-2] == self.previous_actions[-1]):
+            action_mask[self.previous_actions[-1]] = 0
+        return action_mask
 
     def get_observation(self):
         # The 0 piece is always solved because only U, F, and R moves are made.
@@ -44,19 +59,21 @@ class CubeEnv(gym.Env):
         encoded_permutation = one_hot_encode(permutation, category_count=7)
         encoded_orientation = one_hot_encode(orientation, category_count=3)
         cube = np.hstack((encoded_permutation, encoded_orientation))
-        action_mask = np.ones(6)
+        action_mask = self.get_action_mask()
         observation = {'cube': cube, 'action_mask': action_mask}
         return observation
 
     def reset(self, seed=None, return_info=False, options=None):
         super().reset(seed=seed)
         self.cube.reset(seed=seed)
+        self.previous_actions.clear()
         scramble = self.cube.scramble(options['scramble_quarter_turn_count'])
         observation = self.get_observation()
         info = {'scramble': scramble}
         return (observation, info) if return_info else observation
 
     def step(self, action: int):
+        self.previous_actions.append(action)
         move = self.moves[action]
         self.cube.apply_move(move)
         done = self.cube.is_solved()

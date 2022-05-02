@@ -24,7 +24,7 @@ class Trainer:
         print(f'Using device: {self.device}.')
         self.env = CubeEnv()
         self.env.reset(seed=seed, options={
-            'scramble_quarter_turn_count': config.SCRAMBLE_QUARTER_TURN_COUNT})
+            'scramble_length': config.INITIAL_SCRAMBLE_LENGTH})
         self.replay_buffer = deque(maxlen=config.REPLAY_BUFFER_SIZE)
         self.epsilon = config.EPSILON_START
         self.policy_network = DuelingDQN().to(self.device)
@@ -35,6 +35,8 @@ class Trainer:
                                        lr=config.LEARNING_RATE)
         self.criterion = nn.HuberLoss()
         self.solver = Solver(self.device, self.policy_network, self.env)
+        self.scramble_length = config.INITIAL_SCRAMBLE_LENGTH
+        self.scramble_lengths = [(0, config.INITIAL_SCRAMBLE_LENGTH)]
         self.epsilons = []
         self.running_rewards = []
         self.evaluations = []
@@ -115,16 +117,18 @@ class Trainer:
         self.policy_network.eval()
         solved_count = 0
         for _ in range(config.EVALUATION_SOLVE_COUNT):
-            observation = self.env.reset(options={
-                'scramble_quarter_turn_count':
-                    config.SCRAMBLE_QUARTER_TURN_COUNT})
-            solved, _, _ = self.solver.solve_cube(
-                observation, config.EVALUATION_MAX_STEP_COUNT)
+            observation = self.env.reset(
+                options={'scramble_length': self.scramble_length})
+            solved, _, _ = self.solver.solve_cube(observation,
+                                                  self.scramble_length)
             if solved:
                 solved_count += 1
         self.policy_network.train()
         evaluation = solved_count / config.EVALUATION_SOLVE_COUNT
         self.evaluations.append((episode, evaluation))
+        if evaluation > config.SCRAMBLE_LENGTH_INCREASE_EVAL_THRESHOLD:
+            self.scramble_length += 1
+            self.scramble_lengths.append((episode, self.scramble_length))
 
     def save_config(self):
         with open('config.py', 'r') as config_file:
@@ -141,6 +145,11 @@ class Trainer:
         ax.set_xlabel('Episode', fontsize=20)
         ax.tick_params(labelsize=12)
         ax.axvline(config.OPTIMIZATION_START_EPISODE, color='grey')
+        for episode, scramble_length in self.scramble_lengths:
+            ax.axvline(episode, linestyle='dotted')
+            ax.text(episode + config.EVALUATION_INTERVAL / 10, 0.5,
+                    f'scramble length: {scramble_length}', rotation='vertical',
+                    verticalalignment='center')
         ax.plot(self.epsilons, color='g', label='Epsilon')
         ax.plot(self.running_rewards, color='orange', label='Running reward')
         episodes, evaluations = zip(*self.evaluations)
@@ -164,10 +173,9 @@ class Trainer:
         reward = None
         running_reward = None
         for episode in progress_bar:
-            observation = self.env.reset(options={
-                'scramble_quarter_turn_count':
-                    config.SCRAMBLE_QUARTER_TURN_COUNT})
-            for step in range(config.MAX_STEP_COUNT):
+            observation = self.env.reset(
+                options={'scramble_length': self.scramble_length})
+            for step in range(self.scramble_length):
                 action = self.get_action(observation)
                 next_observation, reward, done, _ = self.env.step(action)
                 self.replay_buffer.append(
@@ -189,7 +197,8 @@ class Trainer:
                     or episode == config.EPISODE_COUNT - 1):
                 self.evaluate(episode)
             progress_bar.set_postfix(
-                {'epsilon': f'{self.epsilon:.3f}',
+                {'scramble length': self.scramble_length,
+                 'epsilon': f'{self.epsilon:.3f}',
                  'running reward': f'{running_reward:.3f}',
                  'last eval': f'{self.evaluations[-1][1]:.2f}'})
         self.save_training_run()

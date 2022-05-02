@@ -54,16 +54,15 @@ class Solver:
         solution_length = len(moves)
         return solved, solution, solution_length
 
-    def solve_random_cubes(self, solve_count, scramble_quarter_turn_count,
-                           max_step_count):
+    def solve_random_cubes(self, solve_count, scramble_length, max_step_count):
         """
         Solve a given number of randomly scrambled cubes.
         """
         solved_count = 0
         solves = []
         for _ in tqdm(range(solve_count)):
-            observation, info = self.env.reset(return_info=True, options={
-                'scramble_quarter_turn_count': scramble_quarter_turn_count})
+            observation, info = self.env.reset(
+                return_info=True, options={'scramble_length': scramble_length})
             scramble = info['scramble']
             solved, solution, solution_length = self.solve_cube(
                 observation, max_step_count)
@@ -109,7 +108,7 @@ def plot_solution_lengths(solves):
 def main():
     run_id = '220502012237'
     cube_count = 1000
-    scramble_quarter_turn_count = 14
+    scramble_length = 14
     max_step_count = 20
 
     # torch.equal in solve_cube is very slow on GPU, so use CPU.
@@ -121,7 +120,7 @@ def main():
     env = CubeEnv()
     solver = Solver(device, model, env)
     solved_count, solves = solver.solve_random_cubes(
-        cube_count, scramble_quarter_turn_count, max_step_count)
+        cube_count, scramble_length, max_step_count)
     print_solves(solves, print_type='all')
     print(f'{solved_count}/{cube_count} ({solved_count / cube_count:.2%}) '
           f'solved')

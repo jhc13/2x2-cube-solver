@@ -65,7 +65,7 @@ class CubeEnv(gym.Env):
         super().reset(seed=seed)
         self.cube.reset(seed=seed)
         self.previous_actions.clear()
-        scramble = self.cube.scramble(options['scramble_quarter_turn_count'])
+        scramble = self.cube.scramble(options['scramble_length'])
         observation = self.get_observation()
         info = {'scramble': scramble}
         return (observation, info) if return_info else observation

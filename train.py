@@ -12,6 +12,7 @@ from tqdm import tqdm
 import config
 from cube_env import CubeEnv
 from dueling_dqn import DuelingDQN
+from solve import Solver
 
 
 class Trainer:
@@ -33,8 +34,10 @@ class Trainer:
         self.optimizer = optim.RMSprop(self.policy_network.parameters(),
                                        lr=config.LEARNING_RATE)
         self.criterion = nn.HuberLoss()
+        self.solver = Solver(self.device, self.policy_network, self.env)
         self.epsilons = []
         self.running_rewards = []
+        self.evaluations = []
         self.run_path = None
 
     def update_target_network(self):
@@ -108,6 +111,21 @@ class Trainer:
                 / (config.EPSILON_END_EPISODE
                    - config.OPTIMIZATION_START_EPISODE))
 
+    def evaluate(self, episode):
+        self.policy_network.eval()
+        solved_count = 0
+        for _ in range(config.EVALUATION_SOLVE_COUNT):
+            observation = self.env.reset(options={
+                'scramble_quarter_turn_count':
+                    config.SCRAMBLE_QUARTER_TURN_COUNT})
+            solved, _, _ = self.solver.solve_cube(
+                observation, config.EVALUATION_MAX_STEP_COUNT)
+            if solved:
+                solved_count += 1
+        self.policy_network.train()
+        evaluation = solved_count / config.EVALUATION_SOLVE_COUNT
+        self.evaluations.append((episode, evaluation))
+
     def save_config(self):
         with open('config.py', 'r') as config_file:
             config_string = config_file.read()
@@ -117,28 +135,20 @@ class Trainer:
             config_file.write(config_string)
 
     def save_training_run_plot(self):
-        axis_label_size = 20
-        tick_label_size = 12
-
-        fig = plt.figure(figsize=(12.8, 7.2))
-        ax_1 = fig.add_subplot()
-        ax_1.set_xlim(0, config.EPISODE_COUNT)
-        ax_1.set_ylim(-0.01, 1.01)
-        ax_1.set_xlabel('Episode', fontsize=axis_label_size)
-        ax_1.set_ylabel('Running reward', fontsize=axis_label_size)
-        ax_1.tick_params(labelsize=tick_label_size)
-        ax_1.axvline(config.OPTIMIZATION_START_EPISODE, color='grey')
-        ax_1.plot(self.running_rewards, color='r', label='Running reward')
-        ax_2 = ax_1.twinx()
-        ax_2.set_ylim(-0.01, 1.01)
-        ax_2.set_ylabel('Epsilon', fontsize=axis_label_size)
-        ax_2.tick_params(labelsize=tick_label_size)
-        ax_2.plot(self.epsilons, color='g', label='Epsilon')
+        fig, ax = plt.subplots(figsize=(12.8, 7.2))
+        ax.set_xlim(0, config.EPISODE_COUNT)
+        ax.set_ylim(-0.01, 1.01)
+        ax.set_xlabel('Episode', fontsize=20)
+        ax.tick_params(labelsize=12)
+        ax.axvline(config.OPTIMIZATION_START_EPISODE, color='grey')
+        ax.plot(self.epsilons, color='g', label='Epsilon')
+        ax.plot(self.running_rewards, color='orange', label='Running reward')
+        episodes, evaluations = zip(*self.evaluations)
+        ax.plot(episodes, evaluations, color='r', label='Evaluation')
         fig.legend(loc='lower right', fontsize=12, bbox_to_anchor=(1, 0),
-                   bbox_transform=ax_1.transAxes)
+                   bbox_transform=ax.transAxes)
         fig.tight_layout()
         plt.savefig(f'{self.run_path}/plot.png')
-        plt.close('all')
 
     def save_training_run(self):
         run_name = datetime.datetime.now().strftime("%y%m%d%H%M%S")
@@ -175,9 +185,13 @@ class Trainer:
                     self.update_epsilon(episode)
             if episode % config.TARGET_NETWORK_UPDATE_INTERVAL == 0:
                 self.update_target_network()
+            if (episode % config.EVALUATION_INTERVAL == 0
+                    or episode == config.EPISODE_COUNT - 1):
+                self.evaluate(episode)
             progress_bar.set_postfix(
                 {'epsilon': f'{self.epsilon:.3f}',
-                 'running reward': f'{running_reward:.2f}'})
+                 'running reward': f'{running_reward:.3f}',
+                 'last eval': f'{self.evaluations[-1][1]:.2f}'})
         self.save_training_run()
 
 

@@ -12,7 +12,8 @@ Solve = namedtuple('Solve', ['solved', 'scramble', 'solution',
 
 
 class Solver:
-    def __init__(self, model, env):
+    def __init__(self, device, model, env):
+        self.device = device
         self.model = model
         self.env = env
 
@@ -25,7 +26,7 @@ class Solver:
         solved = False
         for _ in range(max_step_count):
             cube_state = torch.as_tensor(observation['cube_state'],
-                                         dtype=torch.float)
+                                         dtype=torch.float, device=self.device)
             action_mask = observation['action_mask']
             with torch.no_grad():
                 q_values = self.model(cube_state.unsqueeze(0)).squeeze()
@@ -37,7 +38,8 @@ class Solver:
             for action in actions:
                 observation, _, done, _ = self.env.step(action)
                 cube_state = torch.as_tensor(observation['cube_state'],
-                                             dtype=torch.float)
+                                             dtype=torch.float,
+                                             device=self.device)
                 if any(torch.equal(cube_state, previous_state)
                        for previous_state in previous_states):
                     self.env.step(self.env.get_undoing_action(action))
@@ -52,14 +54,14 @@ class Solver:
         solution_length = len(moves)
         return solved, solution, solution_length
 
-    def solve_random_cubes(self, cube_count, scramble_quarter_turn_count,
+    def solve_random_cubes(self, solve_count, scramble_quarter_turn_count,
                            max_step_count):
         """
         Solve a given number of randomly scrambled cubes.
         """
         solved_count = 0
         solves = []
-        for _ in tqdm(range(cube_count)):
+        for _ in tqdm(range(solve_count)):
             observation, info = self.env.reset(return_info=True, options={
                 'scramble_quarter_turn_count': scramble_quarter_turn_count})
             scramble = info['scramble']
@@ -107,17 +109,20 @@ def plot_solution_lengths(solves):
 def main():
     run_id = '220502012237'
     cube_count = 1000
-    scramble_quarter_turn_count = 20
-    max_step_count = 1000
+    scramble_quarter_turn_count = 14
+    max_step_count = 20
 
-    model = DuelingDQN()
+    # torch.equal in solve_cube is very slow on GPU, so use CPU.
+    device = torch.device('cpu')
+    print(f'Using device: {device}.')
+    model = DuelingDQN().to(device)
     model.load_state_dict(torch.load(f'training-runs/{run_id}/state_dict.pt'))
     model.eval()
     env = CubeEnv()
-    solver = Solver(model, env)
+    solver = Solver(device, model, env)
     solved_count, solves = solver.solve_random_cubes(
         cube_count, scramble_quarter_turn_count, max_step_count)
-    print_solves(solves, print_type='solved')
+    print_solves(solves, print_type='all')
     print(f'{solved_count}/{cube_count} ({solved_count / cube_count:.2%}) '
           f'solved')
     plot_solution_lengths(solves)

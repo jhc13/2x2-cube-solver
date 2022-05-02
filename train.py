@@ -126,7 +126,8 @@ class Trainer:
         self.policy_network.train()
         evaluation = solved_count / config.EVALUATION_SOLVE_COUNT
         self.evaluations.append((episode, evaluation))
-        if evaluation > config.SCRAMBLE_LENGTH_INCREASE_EVAL_THRESHOLD:
+        if (evaluation >= config.SCRAMBLE_LENGTH_INCREASE_EVAL_THRESHOLD
+                and self.scramble_length < config.MAX_SCRAMBLE_LENGTH):
             self.scramble_length += 1
             self.scramble_lengths.append((episode, self.scramble_length))
 

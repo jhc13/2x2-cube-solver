@@ -92,6 +92,8 @@ def plot_solution_lengths(solves):
     """
     solution_lengths = [solve.solution_length for solve in solves
                         if solve.solved]
+    if not solution_lengths:
+        return
     fig, ax = plt.subplots(figsize=(12.8, 7.2))
     ax.hist(solution_lengths, bins=range(0, max(solution_lengths) + 1))
     ax.set_xlim(0, max(solution_lengths))

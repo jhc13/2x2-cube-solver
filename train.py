@@ -1,4 +1,5 @@
 import datetime
+import random
 from collections import deque
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from dueling_dqn import DuelingDQN
 
 class Trainer:
     def __init__(self, seed=None):
+        random.seed(seed)
         self.rng = np.random.default_rng(seed)
         self.device = torch.device('cuda' if torch.cuda.is_available()
                                    else 'cpu')
@@ -59,8 +61,8 @@ class Trainer:
         ).item()
 
     def get_experience_batch(self):
-        batch = self.rng.choice(self.replay_buffer, size=config.BATCH_SIZE,
-                                replace=False, shuffle=False)
+        # random.sample is much faster than numpy's self.rng.choice here.
+        batch = random.sample(self.replay_buffer, config.BATCH_SIZE)
         observations, actions, next_observations, rewards, dones = [
             [experience[i] for experience in batch] for i in range(5)]
         observations, next_observations = [{

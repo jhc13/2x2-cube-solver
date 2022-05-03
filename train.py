@@ -1,4 +1,5 @@
 import datetime
+import math
 import random
 from collections import deque
 from pathlib import Path
@@ -44,6 +45,11 @@ class Trainer:
 
     def update_target_network(self):
         self.target_network.load_state_dict(self.policy_network.state_dict())
+
+    def get_scramble_length(self):
+        return (math.ceil(self.scramble_length)
+                if self.rng.random() < self.scramble_length % 1
+                else math.floor(self.scramble_length))
 
     def get_best_actions(self, cube_states, action_masks):
         self.policy_network.eval()
@@ -117,10 +123,10 @@ class Trainer:
         self.policy_network.eval()
         solved_count = 0
         for _ in range(config.EVALUATION_SOLVE_COUNT):
+            scramble_length = self.get_scramble_length()
             observation = self.env.reset(
-                options={'scramble_length': self.scramble_length})
-            solved, _, _ = self.solver.solve_cube(observation,
-                                                  self.scramble_length)
+                options={'scramble_length': scramble_length})
+            solved, _, _ = self.solver.solve_cube(observation, scramble_length)
             if solved:
                 solved_count += 1
         self.policy_network.train()
@@ -128,8 +134,9 @@ class Trainer:
         self.evaluations.append((episode, evaluation))
         if (evaluation >= config.SCRAMBLE_LENGTH_INCREASE_EVAL_THRESHOLD
                 and self.scramble_length < config.MAX_SCRAMBLE_LENGTH):
-            self.scramble_length += 1
-            self.scramble_lengths.append((episode, self.scramble_length))
+            self.scramble_length += 0.1
+            if self.scramble_length.is_integer():
+                self.scramble_lengths.append((episode, self.scramble_length))
 
     def save_config(self):
         with open('config.py', 'r') as config_file:
@@ -174,9 +181,10 @@ class Trainer:
         reward = None
         running_reward = None
         for episode in progress_bar:
+            scramble_length = self.get_scramble_length()
             observation = self.env.reset(
-                options={'scramble_length': self.scramble_length})
-            for step in range(self.scramble_length):
+                options={'scramble_length': scramble_length})
+            for step in range(scramble_length):
                 action = self.get_action(observation)
                 next_observation, reward, done, _ = self.env.step(action)
                 self.replay_buffer.append(
@@ -198,7 +206,7 @@ class Trainer:
                     or episode == config.EPISODE_COUNT - 1):
                 self.evaluate(episode)
             progress_bar.set_postfix(
-                {'scramble length': self.scramble_length,
+                {'scramble length': f'{self.scramble_length:.1f}',
                  'epsilon': f'{self.epsilon:.3f}',
                  'running reward': f'{running_reward:.3f}',
                  'last eval': f'{self.evaluations[-1][1]:.2f}'})

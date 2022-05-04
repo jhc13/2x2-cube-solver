@@ -6,14 +6,14 @@ from torch import nn
 class DuelingDQN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.linear_1 = nn.Linear(60, 256)
-        self.batch_norm_1 = nn.BatchNorm1d(256)
-        self.linear_2 = nn.Linear(256, 128)
-        self.batch_norm_2 = nn.BatchNorm1d(128)
-        self.linear_3 = nn.Linear(128, 64)
-        self.batch_norm_3 = nn.BatchNorm1d(64)
-        self.output_1 = nn.Linear(64, 1)
-        self.output_2 = nn.Linear(64, 6)
+        self.linear_1 = nn.Linear(60, 512)
+        self.batch_norm_1 = nn.BatchNorm1d(512)
+        self.linear_2 = nn.Linear(512, 256)
+        self.batch_norm_2 = nn.BatchNorm1d(256)
+        self.linear_3 = nn.Linear(256, 128)
+        self.batch_norm_3 = nn.BatchNorm1d(128)
+        self.output_1 = nn.Linear(128, 1)
+        self.output_2 = nn.Linear(128, 6)
 
     def forward(self, x):
         x = torch.flatten(x, start_dim=1)

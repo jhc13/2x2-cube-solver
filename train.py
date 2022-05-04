@@ -28,6 +28,9 @@ class Trainer:
         self.replay_buffer = deque(maxlen=config.REPLAY_BUFFER_SIZE)
         self.epsilon = config.EPSILON_START
         self.policy_network = DuelingDQN().to(self.device)
+        if config.RESUME_RUN_PATH is not None:
+            self.policy_network.load_state_dict(
+                torch.load(f'{config.RESUME_RUN_PATH}/state_dict.pt'))
         self.target_network = DuelingDQN().to(self.device)
         self.target_network.eval()
         self.update_target_network()

@@ -1,6 +1,7 @@
 from collections import namedtuple
 
 import matplotlib.pyplot as plt
+import numpy as np
 import torch
 from tqdm import tqdm
 
@@ -96,8 +97,8 @@ def plot_solution_lengths(solves):
     if not solution_lengths:
         return
     fig, ax = plt.subplots(figsize=(12.8, 7.2))
-    ax.hist(solution_lengths, bins=range(0, max(solution_lengths) + 1))
-    ax.set_xlim(0, max(solution_lengths))
+    ax.hist(solution_lengths, bins=np.arange(0.5, max(solution_lengths) + 1.5),
+            align='mid')
     ax.set_xlabel('Moves', fontsize=20)
     ax.set_ylabel('Count', fontsize=20)
     ax.tick_params(labelsize=12)

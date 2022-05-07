@@ -99,6 +99,8 @@ def plot_solution_lengths(solves):
     fig, ax = plt.subplots(figsize=(12.8, 7.2))
     ax.hist(solution_lengths, bins=np.arange(0.5, max(solution_lengths) + 1.5),
             align='mid')
+    # Only allow integer ticks for the x-axis.
+    ax.xaxis.get_major_locator().set_params(integer=True)
     ax.set_xlabel('Moves', fontsize=20)
     ax.set_ylabel('Count', fontsize=20)
     ax.tick_params(labelsize=12)

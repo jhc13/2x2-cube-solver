@@ -125,8 +125,16 @@ def plot_solution_lengths(solves):
     fig.show()
 
 
-def main():
-    run_id = '220502012237'
+def evaluate_model():
+    """
+    Evaluate a trained model by solving a given number of randomly scrambled
+    cubes. Print the number of cubes solved and plot the distribution of
+    solution lengths.
+    """
+    # Set these variables before running the function.
+    # run_id is the name of the directory inside the training-runs directory
+    # where state_dict.pt is located.
+    run_id = '220506013613'
     cube_count = 1000
     scramble_length = 14
     max_step_count = 20
@@ -136,6 +144,8 @@ def main():
     print(f'Using device: {device}.')
     model = DuelingDQN().to(device)
     model.load_state_dict(torch.load(f'training-runs/{run_id}/state_dict.pt'))
+    # Set the model to evaluation mode so that the batch normalization layers
+    # are not updated.
     model.eval()
     env = CubeEnv()
     solver = Solver(device, model, env)
@@ -148,4 +158,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    evaluate_model()

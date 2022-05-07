@@ -39,6 +39,8 @@ class Cube:
         self.rng = None
         self.permutation = None
         self.orientation = None
+        # Store the solved state for resetting or checking if the cube is
+        # solved.
         self.solved_permutation = np.arange(8).reshape((2, 2, 2))
         self.solved_orientation = np.zeros((2, 2, 2), dtype=int)
         self.reset(seed=seed)
@@ -49,6 +51,7 @@ class Cube:
         """
         if seed or self.rng is None:
             self.rng = np.random.default_rng(seed=seed)
+        # Copy the arrays to prevent modifying the solved state.
         self.permutation = self.solved_permutation.copy()
         self.orientation = self.solved_orientation.copy()
 
@@ -64,11 +67,17 @@ class Cube:
         Turn a layer of the cube.
 
         The layer is specified by the axis. The 0, 1, and 2 axes correspond to
-        the U, F, and R layers, respectively.
+        the U, F, and R layers, respectively. Turning other layers is not
+        supported.
         """
+        # If the axis is the axis being turned, then the slice is [1:]
+        # (one layer). If it is a different axis, then the slice is [:]
+        # (all layers). The slices together form a 1x2x2 layer of the cube.
         slices = tuple(slice(1, None) if axis_index == axis
                        else slice(None, None) for axis_index in range(3))
+        # k is the number of counterclockwise quarter turns.
         k = -quarter_turn_count if clockwise else quarter_turn_count
+        # The rotation direction is from axes[0] to axes[1].
         axes = [(1, 2), (2, 0), (0, 1)][axis]
         self.permutation[slices] = np.rot90(self.permutation[slices], k=k,
                                             axes=axes)
@@ -138,6 +147,13 @@ class Cube:
                background_color='#232323', mirror_gap=1.6):
         """
         Display an image of the cube in its current state.
+
+        colors is an optional list of colors for each face. The order of the
+        faces is [[D, U], [B, F], [L, R]]. A standard color scheme is provided
+        by default.
+        The D, B, and L faces are normally hidden from view, so to make them
+        visible, they are shown as if they are reflected in a mirror.
+        mirror_gap is the gap between the cube and the mirrored faces.
         """
         if colors is None:
             colors = [['#ffff00',  # yellow
@@ -149,9 +165,13 @@ class Cube:
 
         fig = plt.figure(figsize=(4, 4))
         ax = fig.add_subplot(projection='3d')
+        # Iterate through each piece of the cube.
         for layer, row, column in np.ndindex(self.permutation.shape):
+            # piece_index is a number from 0 to 7.
             piece_index = self.permutation[layer, row, column]
+            # binary_piece_index is a binary string from '000' to '111'.
             binary_piece_index = np.binary_repr(piece_index, width=3)
+            # piece_colors holds the 3 colors of the piece.
             piece_colors = np.array(
                 [colors[axis][int(position)] for axis, position in
                  enumerate(binary_piece_index)])
@@ -167,6 +187,7 @@ class Cube:
                 axes_to_swap = [[1, 2], [2, 0], [0, 1]][piece_orientation]
                 piece_colors[[axes_to_swap[0], axes_to_swap[1]]] = (
                     piece_colors[[axes_to_swap[1], axes_to_swap[0]]])
+            # Plot a square patch for each face of the piece.
             for axis, color in enumerate(piece_colors):
                 if axis == 0:
                     x = mirror_gap + column

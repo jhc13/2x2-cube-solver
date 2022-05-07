@@ -18,20 +18,31 @@ class Solver:
         self.model = model
         self.env = env
 
-    def solve_cube(self, observation, max_step_count):
+    def solve_cube(self, observation, max_step_count) -> tuple[bool, str, int]:
         """
-        Solve a given cube.
+        Attempt to solve a given cube within the given number of steps.
+
+        Returns whether the cube was solved, the moves made, and the number of
+        moves.
         """
+        # Store the previous states to check for duplicates.
         previous_states = []
         moves = []
         solved = False
         for _ in range(max_step_count):
+            # The cube state must be converted to a PyTorch tensor before it
+            # can be fed into the model.
             cube_state = torch.as_tensor(observation['cube_state'],
                                          dtype=torch.float, device=self.device)
             action_mask = observation['action_mask']
+            # torch.no_grad() is used because the model is not being trained.
             with torch.no_grad():
+                # Unsqueeze the state tensor to add a batch dimension. The
+                # batch size is 1.
                 q_values = self.model(cube_state.unsqueeze(0)).squeeze()
             q_values[~action_mask] = float('-inf')
+            # Sort the possible actions in descending order by their Q-values,
+            # so that each action can be checked for validity in order.
             _, actions = torch.sort(q_values, descending=True)
             actions = [action.item() for action in actions.squeeze()]
             action = None
@@ -41,6 +52,8 @@ class Solver:
                 cube_state = torch.as_tensor(observation['cube_state'],
                                              dtype=torch.float,
                                              device=self.device)
+                # If the cube state has already been reached, undo the action
+                # and try the next action.
                 if any(torch.equal(cube_state, previous_state)
                        for previous_state in previous_states):
                     self.env.step(self.env.get_undoing_action(action))
@@ -55,9 +68,13 @@ class Solver:
         solution_length = len(moves)
         return solved, solution, solution_length
 
-    def solve_random_cubes(self, solve_count, scramble_length, max_step_count):
+    def solve_random_cubes(self, solve_count, scramble_length,
+                           max_step_count) -> tuple[int, list[Solve]]:
         """
         Solve a given number of randomly scrambled cubes.
+
+        Returns the number of cubes solved and the list of solves with
+        information including the scramble, solution, and solution length.
         """
         solved_count = 0
         solves = []
@@ -89,14 +106,14 @@ def print_solves(solves, print_type='all'):
 
 
 def plot_solution_lengths(solves):
-    """
-    Plot the distribution of solution lengths for a given list of solves.
-    """
+    """Plot the distribution of solution lengths for a given list of solves."""
     solution_lengths = [solve.solution_length for solve in solves
                         if solve.solved]
+    # Do not plot if no cubes were solved.
     if not solution_lengths:
         return
     fig, ax = plt.subplots(figsize=(12.8, 7.2))
+    # Set the bins so that the solution lengths are in the middle of the bins.
     ax.hist(solution_lengths, bins=np.arange(0.5, max(solution_lengths) + 1.5),
             align='mid')
     # Only allow integer ticks for the x-axis.

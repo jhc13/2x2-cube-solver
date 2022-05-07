@@ -46,9 +46,7 @@ class Cube:
         self.reset(seed=seed)
 
     def reset(self, seed=None):
-        """
-        Reset the cube to its solved state.
-        """
+        """Reset the cube to its solved state."""
         if seed or self.rng is None:
             self.rng = np.random.default_rng(seed=seed)
         # Copy the arrays to prevent modifying the solved state.
@@ -56,9 +54,7 @@ class Cube:
         self.orientation = self.solved_orientation.copy()
 
     def is_solved(self) -> bool:
-        """
-        Check if the cube is solved.
-        """
+        """Check if the cube is solved."""
         return (np.array_equal(self.permutation, self.solved_permutation)
                 and np.array_equal(self.orientation, self.solved_orientation))
 

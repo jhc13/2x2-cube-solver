@@ -138,8 +138,9 @@ def plot_solution_lengths(solves):
     fig.show()
 
 
-def get_solver(run_id):
-    # torch.equal in solve_cube is very slow on GPU, so use CPU.
+def get_solver(run_id) -> Solver:
+    """Initialize a solver with a given run id."""
+    # torch.equal in Solver.solve_cube is very slow on a GPU, so use the CPU.
     device = torch.device('cpu')
     print(f'Using device: {device}.')
     model = DuelingDQN().to(device)
@@ -151,9 +152,48 @@ def get_solver(run_id):
     return Solver(device, model, env)
 
 
+def evaluate_model():
+    """
+    Evaluate a trained model by solving a given number of randomly scrambled
+    cubes. Print the number of cubes solved and plot the distribution of
+    solution lengths.
+    """
+    # Set these variables before running the function.
+    run_id = '220506013613'
+    cube_count = 1000
+    scramble_length = 14
+    max_step_count = 20
+
+    solver = get_solver(run_id)
+    solver.evaluate_model(cube_count, scramble_length, max_step_count)
+
+
+def solve_scramble():
+    """
+    Use a trained model to solve a given scramble. Display the cube before and
+    after solving.
+    """
+    # Set these variables before running the function.
+    run_id = '220506013613'
+    scramble = "R2 F' R2 U' F R2 U' R' F R F'"
+    max_step_count = 20
+
+    solver = get_solver(run_id)
+    solver.env.cube.apply_moves(scramble)
+    observation = solver.env.get_observation()
+    # Display the scrambled cube.
+    solver.env.render()
+    solved, solution, solution_length = solver.solve_cube(observation,
+                                                          max_step_count)
+    print(f'Solved: {solved}\nScramble: {scramble}\nSolution: {solution} '
+          f'({solution_length} quarter turns)')
+    # Display the solved cube, or the cube in its final state if it was not
+    # solved.
+    solver.env.render()
+
+
 if __name__ == '__main__':
-    # run_id is the name of the directory inside the training-runs directory
-    # where the model's state_dict.pt is located.
-    solver = get_solver(run_id='220506013613')
-    solver.evaluate_model(cube_count=1000, scramble_length=14,
-                          max_step_count=20)
+    # Call evaluate_model or solve_scramble after setting the configuration
+    # variables inside the function.
+    evaluate_model()
+    # solve_scramble()

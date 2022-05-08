@@ -220,7 +220,7 @@ class Trainer:
 
     def save_config(self):
         """Save the training configuration to a text file."""
-        with open('config.py', 'r') as config_file:
+        with open('2x2-cube-solver/config.py', 'r') as config_file:
             config_string = config_file.read()
         config_string += (f'\n{self.criterion}\n\n{self.optimizer}'
                           f'\n\n{self.online_network}\n')

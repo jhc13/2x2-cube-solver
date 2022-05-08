@@ -35,9 +35,9 @@ class Trainer:
         self.replay_buffer = deque(maxlen=config.REPLAY_BUFFER_SIZE)
         self.epsilon = config.EPSILON_START
         self.online_network = DuelingDQN().to(self.device)
-        if config.RESUME_RUN_PATH is not None:
-            self.online_network.load_state_dict(
-                torch.load(f'{config.RESUME_RUN_PATH}/state_dict.pt'))
+        if config.RESUME_RUN_ID is not None:
+            self.online_network.load_state_dict(torch.load(
+                f'training-runs/{config.RESUME_RUN_ID}/state_dict.pt'))
         self.target_network = DuelingDQN().to(self.device)
         # Only the online network is directly trained, so set the target
         # network to evaluation mode.

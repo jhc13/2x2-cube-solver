@@ -51,8 +51,8 @@ To fix this, the training process was changed so that the scramble length was
 initially set to a small number and was increased by 1 every time the model
 reached a certain solution rate threshold during evaluation. This solved the
 previous problem of the model not learning, but another problem emerged, which
-was [catastrophic forgetting](https://en.wikipedia.org/wiki/Catastrophic_interference)
-. Whenever the scramble length was increased, there was a good chance that the
+was [catastrophic forgetting](https://en.wikipedia.org/wiki/Catastrophic_interference).
+Whenever the scramble length was increased, there was a good chance that the
 model would rapidly forget most of its previously learned knowledge.
 
 An attempt to mitigate this problem was to ensure that some scrambles of the
@@ -83,9 +83,7 @@ stagnant.
 
 The final model is able to solve the cube from a variety of scrambled states.
 Shown below is an example of a randomly generated scramble and the model's
-solution. The moves are written in
-standard [Rubik's cube notation](https://en.wikipedia.org/wiki/Rubik%27s_Cube#Move_notation)
-.
+solution. The moves are written in standard [Rubik's cube notation](https://en.wikipedia.org/wiki/Rubik%27s_Cube#Move_notation).
 
 | ![](https://user-images.githubusercontent.com/39209141/167299726-121506a4-bfcd-41e3-9f2c-2e63e70cbdd2.png) | ![](https://user-images.githubusercontent.com/39209141/167299756-af3994e1-7f30-44c6-aaa5-76f833723aa3.png) |
 |:----------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------:|
@@ -94,14 +92,12 @@ standard [Rubik's cube notation](https://en.wikipedia.org/wiki/Rubik%27s_Cube#Mo
 
 The performance of the model was evaluated with sets of 10,000 randomly
 scrambled cubes. The results are summarized in the following table. The first
-column is the length of the scramble
-in [quarter turn metric (QTM)](https://www.speedsolving.com/wiki/index.php/Metric#QTM)
-, and the second column is the maximum number of moves that was allowed for the
+column is the length of the scramble in [quarter turn metric (QTM)](https://www.speedsolving.com/wiki/index.php/Metric#QTM),
+and the second column is the maximum number of moves that was allowed for the
 model to solve the cube, also in QTM. The solution rate in the third column is
 the proportion of cubes that were successfully solved within the allowed move
 count. Scrambles longer than 14 moves were not tested because a 2x2 cube in any
-state can be solved in a maximum of 14 quarter turns (
-the [God's number](https://ruwix.com/the-rubiks-cube/gods-number/)).
+state can be solved in a maximum of 14 quarter turns (the [God's number](https://ruwix.com/the-rubiks-cube/gods-number/)).
 
 | Scramble length | Maximum allowed solution length | Solution rate |
 |:---------------:|:-------------------------------:|:-------------:|

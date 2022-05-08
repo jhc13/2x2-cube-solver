@@ -89,6 +89,19 @@ class Solver:
             solves.append(Solve(solved, scramble, solution, solution_length))
         return solved_count, solves
 
+    def evaluate_model(self, cube_count, scramble_length, max_step_count):
+        """
+        Evaluate a trained model by solving a given number of randomly
+        scrambled cubes. Print the number of cubes solved and plot the
+        distribution of solution lengths.
+        """
+        solved_count, solves = self.solve_random_cubes(
+            cube_count, scramble_length, max_step_count)
+        print_solves(solves, print_type='all')
+        print(f'{solved_count}/{cube_count} ({solved_count / cube_count:.2%}) '
+              f'solved')
+        plot_solution_lengths(solves)
+
 
 def print_solves(solves, print_type='all'):
     """
@@ -125,20 +138,7 @@ def plot_solution_lengths(solves):
     fig.show()
 
 
-def evaluate_model():
-    """
-    Evaluate a trained model by solving a given number of randomly scrambled
-    cubes. Print the number of cubes solved and plot the distribution of
-    solution lengths.
-    """
-    # Set these variables before running the function.
-    # run_id is the name of the directory inside the training-runs directory
-    # where state_dict.pt is located.
-    run_id = '220506013613'
-    cube_count = 1000
-    scramble_length = 14
-    max_step_count = 20
-
+def get_solver(run_id):
     # torch.equal in solve_cube is very slow on GPU, so use CPU.
     device = torch.device('cpu')
     print(f'Using device: {device}.')
@@ -148,14 +148,12 @@ def evaluate_model():
     # are not updated.
     model.eval()
     env = CubeEnv()
-    solver = Solver(device, model, env)
-    solved_count, solves = solver.solve_random_cubes(
-        cube_count, scramble_length, max_step_count)
-    print_solves(solves, print_type='all')
-    print(f'{solved_count}/{cube_count} ({solved_count / cube_count:.2%}) '
-          f'solved')
-    plot_solution_lengths(solves)
+    return Solver(device, model, env)
 
 
 if __name__ == '__main__':
-    evaluate_model()
+    # run_id is the name of the directory inside the training-runs directory
+    # where the model's state_dict.pt is located.
+    solver = get_solver(run_id='220506013613')
+    solver.evaluate_model(cube_count=1000, scramble_length=14,
+                          max_step_count=20)

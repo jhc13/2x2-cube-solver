@@ -1,6 +1,6 @@
 # 2x2 Cube Solver
 
-A Dueling Double DQN implementation of a 2x2 Rubik's cube solver.
+A Dueling Double Deep Q-Network implementation of a 2x2 Rubik's cube solver.
 
 ## Description
 
@@ -44,13 +44,13 @@ functions before calling them in `solve.py`.
 
 Initially, the scramble length was fixed for the entire training run. Because a
 reward was only given when the cube was solved, and the chance of reaching the
-solved state through almost random moves from a sufficiently well-scrambled
+solved state through nearly random moves from a sufficiently well-scrambled
 initial state was extremely low, the model learned almost nothing.
 
 To fix this, the training process was changed so that the scramble length was
-initially set to a small number and was increased by 1 every time the model
+initially set to a small number and was increased by 1 each time the model
 reached a certain solution rate threshold during evaluation. This solved the
-previous problem of the model not learning, but another problem emerged, which
+previous problem of the model not learning, but another problem that emerged
 was [catastrophic forgetting](https://en.wikipedia.org/wiki/Catastrophic_interference).
 Whenever the scramble length was increased, there was a good chance that the
 model would rapidly forget most of its previously learned knowledge.
@@ -81,9 +81,10 @@ stagnant.
 
 ## Results
 
-The final model is able to solve the cube from a variety of scrambled states.
-Shown below is an example of a randomly generated scramble and the model's
-solution. The moves are written in standard [Rubik's cube notation](https://en.wikipedia.org/wiki/Rubik%27s_Cube#Move_notation).
+The final model is able to solve the 2x2 Rubik's cube from a variety of
+scrambled states. Shown below is an example of a randomly generated scramble
+and the model's solution. The moves are written in standard
+[Rubik's cube notation](https://en.wikipedia.org/wiki/Rubik%27s_Cube#Move_notation).
 
 | ![](https://user-images.githubusercontent.com/39209141/167299726-121506a4-bfcd-41e3-9f2c-2e63e70cbdd2.png) | ![](https://user-images.githubusercontent.com/39209141/167299756-af3994e1-7f30-44c6-aaa5-76f833723aa3.png) |
 |:----------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------:|
@@ -112,11 +113,11 @@ state can be solved in a maximum of 14 quarter turns (the [God's number](https:/
 |       14        |               20                |     18.6%     |
 |       14        |               500               |    100.0%     |
 
-The solution rate decreases as the scramble length increases, but increases
-when the maximum allowed solution length is increased. Although the model was
-never trained on scrambles longer than 8 moves, it solves many of them
-successfully. In fact, it is able to solve all 10,000 of the length 14
-scrambles when the maximum allowed solution length is set to 500. The solution
+The solution rate decreased as the scramble length increased, but increased
+when the maximum allowed solution length was increased. Although the model was
+never trained on scrambles longer than 8 moves, it solved many of them
+successfully. In fact, it was able to solve all 10,000 of the length 14
+scrambles when the maximum allowed solution length was set to 500. The solution
 length distribution is shown below.
 
 | ![](https://user-images.githubusercontent.com/39209141/167299769-12782ab3-9be0-4597-84d9-dcbc560309fa.png) |
@@ -124,7 +125,7 @@ length distribution is shown below.
 |                       Solution length distribution for 10,000 scrambles of length 14                       |
 
 Part of this solving ability can be attributed to the fact that moves leading
-to a repeated state are not allowed. For difficult scrambles, the model
+to a repeated state were not allowed. For difficult scrambles, the model
 presumably makes nearly random moves until it reaches a state that it is
 familiar with. For comparison, a completely untrained model was given the same
 task. It managed to solve none of the 10,000 scrambles within 1000 moves, even

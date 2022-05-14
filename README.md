@@ -1,6 +1,6 @@
 # 2x2 Cube Solver
 
-A Dueling Double Deep Q-Network implementation of a 2x2 Rubik's cube solver.
+A Dueling Double Deep Q-Network agent that solves a 2x2 Rubik's cube.
 
 ## Description
 
